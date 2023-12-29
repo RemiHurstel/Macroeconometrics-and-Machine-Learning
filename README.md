@@ -4,11 +4,13 @@
 
 ## Installation
 
-We download the macroeconomic data by using the FRED API ([pyfredapi](https://github.com/gw-moore/pyfredapi)).
+To install the libraries we use:
 
 ```
-pip install pyfredapi
+pip install -r requirements.txt
 ```
+
+We download the macroeconomic data by using the FRED API ([pyfredapi](https://github.com/gw-moore/pyfredapi)).
 
 ### FRED API Key
 
