@@ -1,0 +1,87 @@
+---
+title: "inflation_forecasting"
+output: html_document
+date: "2024-01-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(randomForest)
+```
+
+
+```{r}
+data <- read.csv("./data/inputs_rf.csv")
+```
+
+```{r}
+raw_data <- data[25:nrow(data),]
+series <- colnames(raw_data[,2:ncol(raw_data)])
+dates <- raw_data$date
+T <- length(dates)
+```
+
+```{r}
+yt = raw_data[,2:ncol(raw_data)]
+dim_yt <- dim(yt)
+TT <- dim_yt[1]
+NN <- dim_yt[2]
+```
+
+```{r}
+y <- as.data.frame(scale(yt,scale=TRUE)) # standardize the data for plotting
+```
+
+```{r}
+Y<-y[13:nrow(y),1]
+XX<-cbind(
+  y[12:(nrow(y)-1),],y[11:(nrow(y)-2),],
+  y[10:(nrow(y)-3),],y[9:(nrow(y)-4),],
+  y[8:(nrow(y)-5),],y[7:(nrow(y)-6),],
+  y[6:(nrow(y)-7),],y[5:(nrow(y)-8),],
+  y[4:(nrow(y)-9),],y[3:(nrow(y)-10),],
+  y[2:(nrow(y)-11),],y[1:(nrow(y)-12),])
+X1<-scale(XX,center=TRUE,scale=TRUE)
+
+```
+
+```{r}
+set.seed(117)
+rf.fit <- randomForest(X1,Y,ntree=300,mtry=10,importance=TRUE)
+rf.fit
+plot(rf.fit)
+```
+
+```{r}
+dim(rf.fit$importance)
+plot(1:360,rf.fit$importance[,2],ylab="mean decrease in MSE")
+```
+
+```{r}
+plot(Y, type='l', col='blue')
+lines(predict(rf.fit, newdata = X1), col='red')
+```
+```{r}
+X_train = X1[1:240,]
+X_test = X1[241:nrow(X1),]
+Y_train = Y[1:240]
+Y_test = Y[241:nrow(X1)]
+```
+
+```{r}
+set.seed(117)
+rf2.fit <- randomForest(X_train,Y_train,ntree=300,mtry=10,importance=TRUE)
+rf2.fit
+plot(rf2.fit)
+```
+```{r}
+plot(Y_test, type='l', col='blue')
+lines(predict(rf.fit, newdata = X_test), col='red')
+```
+
+
