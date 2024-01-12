@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(randomForest)
+library(lubridate)
+library(dplyr)
 ```
 
 
@@ -27,7 +29,7 @@ T <- length(dates)
 ```
 
 ```{r}
-yt = raw_data[,2:ncol(raw_data)]
+yt <- raw_data[,2:ncol(raw_data)]
 dim_yt <- dim(yt)
 TT <- dim_yt[1]
 NN <- dim_yt[2]
@@ -38,16 +40,24 @@ y <- as.data.frame(scale(yt,scale=TRUE)) # standardize the data for plotting
 ```
 
 ```{r}
-Y<-y[13:nrow(y),1]
+Y <- y[13:nrow(y),1]
 XX<-cbind(
-  y[12:(nrow(y)-1),],y[11:(nrow(y)-2),],
-  y[10:(nrow(y)-3),],y[9:(nrow(y)-4),],
-  y[8:(nrow(y)-5),],y[7:(nrow(y)-6),],
-  y[6:(nrow(y)-7),],y[5:(nrow(y)-8),],
-  y[4:(nrow(y)-9),],y[3:(nrow(y)-10),],
-  y[2:(nrow(y)-11),],y[1:(nrow(y)-12),])
+  setNames(y[12:(nrow(y)-1),], paste0(names(y[12:(nrow(y)-1),]),"_t-1")),
+  setNames(y[11:(nrow(y)-2),], paste0(names(y[11:(nrow(y)-2),]),"_t-2")),
+  setNames(y[10:(nrow(y)-3),], paste0(names(y[10:(nrow(y)-3),]),"_t-3")),
+  setNames(y[9:(nrow(y)-4),], paste0(names(y[9:(nrow(y)-4),]),"_t-4")),
+  setNames(y[8:(nrow(y)-5),], paste0(names(y[8:(nrow(y)-5),]),"_t-5")),
+  setNames(y[7:(nrow(y)-6),], paste0(names(y[7:(nrow(y)-6),]),"_t-6")),
+  setNames(y[6:(nrow(y)-7),], paste0(names(y[6:(nrow(y)-7),]),"_t-7")),
+  setNames(y[5:(nrow(y)-8),], paste0(names(y[5:(nrow(y)-8),]),"_t-8")),
+  setNames(y[4:(nrow(y)-9),], paste0(names(y[4:(nrow(y)-9),]),"_t-9")),
+  setNames(y[3:(nrow(y)-10),], paste0(names(y[3:(nrow(y)-10),]),"_t-10")),
+  setNames(y[2:(nrow(y)-11),], paste0(names(y[2:(nrow(y)-11),]),"_t-11")),
+  setNames(y[1:(nrow(y)-12),], paste0(names(y[1:(nrow(y)-12),]),"_t-12")))
 X1<-scale(XX,center=TRUE,scale=TRUE)
-
+compute_mse <- function(actual_values, predicted_values) {
+  return(mean((actual_values-predicted_values)**2))
+}
 ```
 
 ```{r}
@@ -57,31 +67,110 @@ rf.fit
 plot(rf.fit)
 ```
 
+
 ```{r}
-dim(rf.fit$importance)
-plot(1:360,rf.fit$importance[,2],ylab="mean decrease in MSE")
+rf_importance = rf.fit$importance[,2]
+plot(1:360,rf_importance,ylab="mean decrease in MSE")
 ```
 
 ```{r}
-plot(Y, type='l', col='blue')
-lines(predict(rf.fit, newdata = X1), col='red')
+df_importance = as.data.frame(rf_importance)
+arrange(df_importance, desc(rf_importance))
 ```
+
 ```{r}
-X_train = X1[1:240,]
-X_test = X1[241:nrow(X1),]
-Y_train = Y[1:240]
-Y_test = Y[241:nrow(X1)]
+cat("MSE Global: ",compute_mse(Y, predict(rf.fit, newdata = X1)), "\n")
+```
+
+```{r}
+dates_plot = ymd(dates[13:length(dates)])
+plot(dates_plot, Y, type='l', col='blue', 
+     ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
+lines(dates_plot, predict(rf.fit, newdata = X1), col='red')
+at1 = seq(min(dates_plot), max(dates_plot), by = "2 years")
+axis.Date(side=1, dates_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
+legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"), 
+       lty = c(1,1), cex = 0.8)
+```
+Now we train a Random Forest on the period January 1994 - December 2013.
+We will test its performances on the period January 2014 - December 2023.
+```{r}
+X1_train <- X1[1:240,]
+X1_test <- X1[241:nrow(X1),]
+Y_train <- Y[1:240]
+Y_test <- Y[241:nrow(X1)]
 ```
 
 ```{r}
 set.seed(117)
-rf2.fit <- randomForest(X_train,Y_train,ntree=300,mtry=10,importance=TRUE)
+rf2.fit <- randomForest(X1_train,Y_train,ntree=300,mtry=10,importance=TRUE)
 rf2.fit
 plot(rf2.fit)
 ```
 ```{r}
-plot(Y_test, type='l', col='blue')
-lines(predict(rf.fit, newdata = X_test), col='red')
+dates_train_plot = ymd(dates[13:252])
+plot(dates_train_plot, Y_train, type='l', col='blue', 
+     ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
+lines(dates_train_plot, predict(rf2.fit, newdata = X1_train), col='red')
+at1 = seq(min(dates_train_plot), max(dates_train_plot), by = "2 years")
+axis.Date(side=1, dates_train_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
+legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"), 
+       lty = c(1,1), cex = 0.8)
+```
+
+```{r}
+dates_test_plot = ymd(dates[253:length(dates)])
+plot(dates_test_plot, Y_test, type='l', col='blue', 
+     ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
+lines(dates_test_plot, predict(rf2.fit, newdata = X1_test), col='red')
+at1 = seq(min(dates_test_plot), max(dates_test_plot), by = "2 years")
+axis.Date(side=1, dates_test_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
+legend("topleft", legend = c("True", "Forecast"), col = c("blue","red"), 
+       lty = c(1,1), cex = 0.8)
+```
+```{r}
+cat("MSE Global: ",compute_mse(Y, predict(rf2.fit, newdata = X1)), "\n")
+cat("MSE Train: ",compute_mse(Y_train, predict(rf2.fit, newdata = X1_train)), "\n")
+cat("MSE Test: ",compute_mse(Y_test, predict(rf2.fit, newdata = X1_test)))
+```
+```{r}
+dates_plot = ymd(dates[13:length(dates)])
+plot(dates_plot, Y, type='l', col='blue', 
+     ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
+lines(dates_plot, predict(rf2.fit, newdata = X1), col='red')
+at1 = seq(min(dates_plot), max(dates_plot), by = "2 years")
+axis.Date(side=1, dates_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
+legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"), 
+       lty = c(1,1), cex = 0.8)
+```
+```{r}
+indices_train = sample(1:nrow(X1), size=240)
+X1_train_2 <- X1[indices_train,]
+X1_test_2 <- X1[-indices_train,]
+Y_train_2 <- Y[indices_train]
+Y_test_2 <- Y[-indices_train]
+set.seed(117)
+rf3.fit <- randomForest(X1_train_2,Y_train_2,ntree=300,mtry=10,importance=TRUE)
+rf3.fit
+plot(rf3.fit)
+```
+
+```{r}
+cat("MSE Global: ",compute_mse(Y, predict(rf3.fit, newdata = X1)), "\n")
+cat("MSE Train: ",compute_mse(Y_train_2, predict(rf3.fit, newdata = X1_train_2)), "\n")
+cat("MSE Test: ",compute_mse(Y_test_2, predict(rf3.fit, newdata = X1_test_2)), "\n")
+cat("MSE 2014-2023: ",compute_mse(Y_test, predict(rf3.fit, newdata = X1_test)))
+```
+
+```{r}
+dates_plot = ymd(dates[13:length(dates)])
+plot(dates_plot, Y, type='l', col='blue', 
+     ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
+lines(dates_plot, predict(rf3.fit, newdata = X1), col='red')
+at1 = seq(min(dates_plot), max(dates_plot), by = "2 years")
+axis.Date(side=1, dates_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
+legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"), 
+       lty = c(1,1), cex = 0.8)
 ```
 
 

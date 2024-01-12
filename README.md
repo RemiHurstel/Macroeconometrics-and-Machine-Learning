@@ -27,3 +27,37 @@ You can find the documentation of the pyfredapi on this [link](https://pyfredapi
 ## Macroeconomics data
 
 List of the data we use:
+
+
+|    fred code    | Description                                                                                           |
+| :-------------: | ----------------------------------------------------------------------------------------------------- |
+|    CPIAUCSL    | Consumer Price Index for All Urban Consumers: All Items in U.S. City Average                          |
+|     UNRATE     | Unemployment Rate                                                                                     |
+|    FEDFUNDS    | Federal Funds Effective Rate                                                                         |
+|      M1SL      | M1                                                                                                    |
+| MRTSSM44000USS | Retail Sales: Retail Trade                                                                           |
+|     UMCSENT     | University of Michigan: Consumer Sentiment                                                           |
+|   PCUOMFGOMFG   | Producer Price Index by Industry: Total Manufacturing Industries                                     |
+|     W875RX1     | Real personal income excluding current transfer receipts                                             |
+|      M2SL      | M2                                                                                                    |
+|    DTCTHFNM    | Total Consumer Loans and Leases Owned and Securitized by Finance Companies, Level                    |
+|      AMBSL      | St. Louis Adjusted Monetary Base (DISCONTINUED)                                                      |
+|    BUSLOANS    | Commercial and Industrial Loans, All Commercial Banks                                                |
+|    PCU311311    | Producer Price Index by Industry: Food Manufacturing                                                 |
+|     BOPGSTB     | Trade Balance: Goods and Services, Balance of Payments Basis                                         |
+|    TWEXMMTH    | Nominal Major Currencies U.S. Dollar Index (Goods Only) (DISCONTINUED)                               |
+|  USASARTMISMEI  | Sales: Retail Trade: Total Retail Trade: Volume for United States                                    |
+|       IR       | Import Price Index (End Use): All Commodities                                                        |
+|       IQ       | Export Price Index (End Use): All Commodities                                                        |
+|      IMPGS      | Imports of Goods and Services                                                                         |
+|     NETEXP     | Net Exports of Goods and Services                                                                     |
+| OECDCPALTT01GYM | Consumer Price Index: All Items: Total                                                                |
+|    CMRMTSPL    | Real Manufacturing and Trade Industries Sales                                                         |
+|     INDPRO     | Industrial Production: Total Index                                                                    |
+|     PERMIT     | New Privately-Owned Housing Units Authorized in Permit-Issuing Places: Total Units                   |
+|     GPDIC1     | Real Gross Private Domestic Investment                                                                |
+|   MTSDS133FMS   | Federal Surplus or Deficit                                                                            |
+|   POILBREUSDM   | Global price of Brent Crude                                                                           |
+|      GS10      | Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis |
+|    NONBORRES    | Reserves of Depository Institutions, Nonborrowed                                                      |
+|  CES0600000007  | Average Weekly Hours of Production and Nonsupervisory Employees, Goods-Producing                     |
