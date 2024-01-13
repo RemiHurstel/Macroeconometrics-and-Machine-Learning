@@ -8,20 +8,17 @@ date: "2024-01-10"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-
 ```{r}
+# Import libraries
 library(randomForest)
 library(lubridate)
 library(dplyr)
 ```
 
-
 ```{r}
+# Read data
 data <- read.csv("./data/inputs_rf.csv")
-```
-
-```{r}
+# Select data from January 1993 to December 2023 (31 years -> 372 observations)
 raw_data <- data[25:nrow(data),]
 series <- colnames(raw_data[,2:ncol(raw_data)])
 dates <- raw_data$date
@@ -33,13 +30,7 @@ yt <- raw_data[,2:ncol(raw_data)]
 dim_yt <- dim(yt)
 TT <- dim_yt[1]
 NN <- dim_yt[2]
-```
-
-```{r}
 y <- as.data.frame(scale(yt,scale=TRUE)) # standardize the data for plotting
-```
-
-```{r}
 Y <- y[13:nrow(y),1]
 XX<-cbind(
   setNames(y[12:(nrow(y)-1),], paste0(names(y[12:(nrow(y)-1),]),"_t-1")),
@@ -55,11 +46,17 @@ XX<-cbind(
   setNames(y[2:(nrow(y)-11),], paste0(names(y[2:(nrow(y)-11),]),"_t-11")),
   setNames(y[1:(nrow(y)-12),], paste0(names(y[1:(nrow(y)-12),]),"_t-12")))
 X1<-scale(XX,center=TRUE,scale=TRUE)
+```
+
+```{r}
+# Function to compute the mean square error and compare the forecasts
 compute_mse <- function(actual_values, predicted_values) {
   return(mean((actual_values-predicted_values)**2))
 }
 ```
 
+## 1) Random Forest on the entire period
+We train the RF on the entire period and compare the fitted with the true values.
 ```{r}
 set.seed(117)
 rf.fit <- randomForest(X1,Y,ntree=300,mtry=10,importance=TRUE)
@@ -67,16 +64,42 @@ rf.fit
 plot(rf.fit)
 ```
 
-
+### Importance of each variable
 ```{r}
 rf_importance = rf.fit$importance[,2]
 plot(1:360,rf_importance,ylab="mean decrease in MSE")
 ```
-
+We sort the columns according to their importance value.
 ```{r}
 df_importance = as.data.frame(rf_importance)
 arrange(df_importance, desc(rf_importance))
 ```
+We can see that the most important ones are in the order:
+  - the CPI inflation rate of the precedent month (CPIAUCSL_t-1);
+  - the CPI inflation rate of 2 months before (CPIAUCSL_t-2);
+  - the Producer Price Index by Industry of the precedent month (PCUOMFGOMFG_t-1);
+  - the CPI inflation rate of 3 months before (CPIAUCSL_t-3);
+  - the unemployment rate of 6 and 8 months before (UNRATE_t-6 and UNRATE_t-8).
+
+We compute now the mean importance of each of our 30 variables.
+```{r}
+df_mean_importance <- data.frame(
+  variable=rep(names(y),12), rf_importance=df_importance$rf_importance)
+df_mean_importance <- aggregate(rf_importance ~ variable, 
+                                data = df_mean_importance, FUN = mean)
+df_mean_importance_sort <- arrange(df_mean_importance, desc(rf_importance))
+df_mean_importance_sort
+```
+```{r}
+par(mar = c(10 ,3, 1, 1))
+barplot(df_mean_importance_sort$rf_importance, names.arg = df_mean_importance_sort$variable, las=2, main = 'Mean importance of each variable')
+```
+We can see that the most important variables are in the order:
+  - the CPI inflation rate (CPIAUCSL);
+  - the Producer Price Index by Industry of the precedent month (PCUOMFGOMFG);
+  - the unemployment rate (UNRATE);
+  - the Export Price Index (IQ).
+
 
 ```{r}
 cat("MSE Global: ",compute_mse(Y, predict(rf.fit, newdata = X1)), "\n")
@@ -84,7 +107,7 @@ cat("MSE Global: ",compute_mse(Y, predict(rf.fit, newdata = X1)), "\n")
 
 ```{r}
 dates_plot = ymd(dates[13:length(dates)])
-plot(dates_plot, Y, type='l', col='blue', 
+plot(dates_plot, Y, type='l', col='blue', main = 'True and Fitted values',
      ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
 lines(dates_plot, predict(rf.fit, newdata = X1), col='red')
 at1 = seq(min(dates_plot), max(dates_plot), by = "2 years")
@@ -92,16 +115,20 @@ axis.Date(side=1, dates_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
 legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"), 
        lty = c(1,1), cex = 0.8)
 ```
-Now we train a Random Forest on the period January 1994 - December 2013.
-We will test its performances on the period January 2014 - December 2023.
+We can observe that our RF fits very well to the true data.
+
+
+
+## 2) Forecast inflation
+We want to know if when we train a RF on the past period, what is the quality of the forecast on the future values.
+Now we train a Random Forest on the period January 1994 - December 2013 (240 observations).
+We will test its performances on the period January 2014 - December 2023 (120 observations).
 ```{r}
 X1_train <- X1[1:240,]
 X1_test <- X1[241:nrow(X1),]
 Y_train <- Y[1:240]
 Y_test <- Y[241:nrow(X1)]
-```
 
-```{r}
 set.seed(117)
 rf2.fit <- randomForest(X1_train,Y_train,ntree=300,mtry=10,importance=TRUE)
 rf2.fit
@@ -110,6 +137,7 @@ plot(rf2.fit)
 ```{r}
 dates_train_plot = ymd(dates[13:252])
 plot(dates_train_plot, Y_train, type='l', col='blue', 
+     main = 'True and Fitted values on train data', 
      ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
 lines(dates_train_plot, predict(rf2.fit, newdata = X1_train), col='red')
 at1 = seq(min(dates_train_plot), max(dates_train_plot), by = "2 years")
@@ -117,10 +145,12 @@ axis.Date(side=1, dates_train_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.
 legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"), 
        lty = c(1,1), cex = 0.8)
 ```
+It still fits very well on the train data.
 
 ```{r}
 dates_test_plot = ymd(dates[253:length(dates)])
-plot(dates_test_plot, Y_test, type='l', col='blue', 
+plot(dates_test_plot, Y_test, type='l', col='blue',
+     main = 'True and Forecast values on test data', 
      ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
 lines(dates_test_plot, predict(rf2.fit, newdata = X1_test), col='red')
 at1 = seq(min(dates_test_plot), max(dates_test_plot), by = "2 years")
@@ -128,21 +158,32 @@ axis.Date(side=1, dates_test_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8
 legend("topleft", legend = c("True", "Forecast"), col = c("blue","red"), 
        lty = c(1,1), cex = 0.8)
 ```
+We can observe that the forecast is less accurate for the test  part than for the train part.
+Indeed, the RF doesn't succeed to forecast correctly the increasing inflation from 2021 and underestimates it.
+
 ```{r}
 cat("MSE Global: ",compute_mse(Y, predict(rf2.fit, newdata = X1)), "\n")
 cat("MSE Train: ",compute_mse(Y_train, predict(rf2.fit, newdata = X1_train)), "\n")
 cat("MSE Test: ",compute_mse(Y_test, predict(rf2.fit, newdata = X1_test)))
 ```
+The MSE between the train and test data sets are very different.
+We want to have a lower MSE for the test part.
+
 ```{r}
 dates_plot = ymd(dates[13:length(dates)])
 plot(dates_plot, Y, type='l', col='blue', 
      ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
-lines(dates_plot, predict(rf2.fit, newdata = X1), col='red')
+lines(dates_train_plot, predict(rf2.fit, newdata = X1_train), col='red')
+lines(dates_test_plot, predict(rf2.fit, newdata = X1_test), type = 'l', lty=2, col='red')
 at1 = seq(min(dates_plot), max(dates_plot), by = "2 years")
 axis.Date(side=1, dates_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
-legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"), 
-       lty = c(1,1), cex = 0.8)
+legend("topleft", legend = c("True", "Fitted", "Forecast"), col = c("blue","red", "red"), 
+       lty = c(1,1,2), cex = 0.8)
 ```
+## 3) Randomly selection of the train data
+We have seen that we train our RF only on the past values, when we want to forecast on a future horizon, the accuracy of our RF decreases a lot.
+To try to solve this, we will randomly select the observations we will use to train the model.
+We still keep a train data set of 240 observations and a test data set of 120 observations.
 ```{r}
 indices_train = sample(1:nrow(X1), size=240)
 X1_train_2 <- X1[indices_train,]
@@ -159,7 +200,6 @@ plot(rf3.fit)
 cat("MSE Global: ",compute_mse(Y, predict(rf3.fit, newdata = X1)), "\n")
 cat("MSE Train: ",compute_mse(Y_train_2, predict(rf3.fit, newdata = X1_train_2)), "\n")
 cat("MSE Test: ",compute_mse(Y_test_2, predict(rf3.fit, newdata = X1_test_2)), "\n")
-cat("MSE 2014-2023: ",compute_mse(Y_test, predict(rf3.fit, newdata = X1_test)))
 ```
 
 ```{r}
@@ -173,4 +213,16 @@ legend("topleft", legend = c("True", "Fitted"), col = c("blue","red"),
        lty = c(1,1), cex = 0.8)
 ```
 
-
+```{r}
+dates_plot = ymd(dates[13:length(dates)])
+dates_train_plot = dates_plot[indices_train]
+dates_test_plot = dates_plot[-indices_train]
+plot(dates_plot, Y, type='l', col='blue', 
+     ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
+points(dates_train_plot, predict(rf3.fit, newdata = X1_train_2), col="green")
+points(dates_test_plot, predict(rf3.fit, newdata = X1_test_2), col="red")
+at1 = seq(min(dates_plot), max(dates_plot), by = "2 years")
+axis.Date(side=1, dates_plot,  at=at1, las=2,  format= "%Y", cex.axis = 0.8)
+legend("topleft", legend = c("True", "Fitted", "Forecast"), col = c("blue","green", "red"), 
+       lty = c(1,1,1), cex = 0.8)
+```
