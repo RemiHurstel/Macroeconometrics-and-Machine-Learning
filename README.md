@@ -1,6 +1,4 @@
-# Project Macroeconometrics and Machine Learning
-
-# Forecasting inflation with Random Forest
+# Random Forest for Inflation Forecasting
 
 ## Installation
 
@@ -23,6 +21,9 @@ You can now use the notebook named `download` !
 ### pyfredapi documentation
 
 You can find the documentation of the pyfredapi on this [link](https://pyfredapi.readthedocs.io/en/latest/).
+
+## Structure
+
 
 ## Macroeconomics data
 
