@@ -29,6 +29,7 @@ You can find the documentation of pyfredapi on this [link](https://pyfredapi.rea
 The repository contains:
 
 * a folder `data` which contains the inputs we dowload for the model and the meanings of each of the vairables used as imputs
+* a folder `figures` which contains some figures showing interessant results
 * a Python notebook `download.ipynb` which download the macroeconomics data from the FRED website using `pyfredapi`
 * a R Markdown notebook `inflation_forecasting.Rmd` wich contains our model and the different fit and forecasts with analysis.
 

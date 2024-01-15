@@ -61,7 +61,7 @@ We train the RF on the entire period and compare the fitted with the true values
 set.seed(117)
 rf.fit <- randomForest(X1,Y,ntree=300,mtry=10,importance=TRUE)
 rf.fit
-plot(rf.fit)
+plot(rf.fit, main = "Evolution of the error according to the number of trees")
 ```
 
 ### Importance of each variable
@@ -92,7 +92,11 @@ df_mean_importance_sort
 ```
 ```{r}
 par(mar = c(10 ,3, 1, 1))
-barplot(df_mean_importance_sort$rf_importance, names.arg = df_mean_importance_sort$variable, las=2, main = 'Mean importance of each variable')
+couleurs <- colorRampPalette(c("red", "yellow"))(length(df_mean_importance_sort$variable))
+barplot(df_mean_importance_sort$rf_importance, 
+        names.arg = df_mean_importance_sort$variable,
+        col = couleurs,
+        las=2, main = 'Mean importance of each variable')
 ```
 We can see that the most important variables are in the order:
   - the CPI inflation rate (CPIAUCSL);
@@ -132,7 +136,7 @@ Y_test <- Y[241:nrow(X1)]
 set.seed(117)
 rf2.fit <- randomForest(X1_train,Y_train,ntree=300,mtry=10,importance=TRUE)
 rf2.fit
-plot(rf2.fit)
+plot(rf2.fit, main = "Evolution of the error according to the number of trees")
 ```
 ```{r}
 dates_train_plot = ymd(dates[13:252])
@@ -171,7 +175,8 @@ We want to have a lower MSE for the test part.
 
 ```{r}
 dates_plot = ymd(dates[13:length(dates)])
-plot(dates_plot, Y, type='l', col='blue', 
+plot(dates_plot, Y, type='l', col='blue',
+     main = 'True, Fitted and Forecast values',
      ylab = 'CPI inflation rate growth rate (%)', xlab='', xaxt="n")
 lines(dates_train_plot, predict(rf2.fit, newdata = X1_train), col='red')
 lines(dates_test_plot, predict(rf2.fit, newdata = X1_test), type = 'l', lty=2, col='red')
@@ -193,7 +198,7 @@ Y_test_2 <- Y[-indices_train]
 set.seed(117)
 rf3.fit <- randomForest(X1_train_2,Y_train_2,ntree=300,mtry=10,importance=TRUE)
 rf3.fit
-plot(rf3.fit)
+plot(rf3.fit, main = "Evolution of the error according to the number of trees")
 ```
 
 ```{r}
