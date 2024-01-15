@@ -1,5 +1,7 @@
 # Random Forest for Inflation Forecasting
 
+This project has been realized by Victor Francey and Rémi Hurstel for the course of ***Macroeconometrics and Machine Learning*** from Professor Simoni.
+
 ## Installation
 
 To install the libraries we use:
@@ -20,15 +22,21 @@ You can now use the notebook named `download` !
 
 ### pyfredapi documentation
 
-You can find the documentation of the pyfredapi on this [link](https://pyfredapi.readthedocs.io/en/latest/).
+You can find the documentation of pyfredapi on this [link](https://pyfredapi.readthedocs.io/en/latest/).
 
 ## Structure
 
+The repository contains:
+
+* a folder `data` which contains the inputs we dowload for the model and the meanings of each of the vairables used as imputs
+* a Python notebook `download.ipynb` which download the macroeconomics data from the FRED website using `pyfredapi`
+* a R Markdown notebook `inflation_forecasting.Rmd` wich contains our model and the different fit and forecasts with analysis.
+
+If you just want to see our Random Forest model, you don't need to run the `download.ipynb` notebook. You only need to use the `inflation_forecasting.Rmd` file.
 
 ## Macroeconomics data
 
 List of the data we use:
-
 
 |    fred code    | Description                                                                                           |
 | :-------------: | ----------------------------------------------------------------------------------------------------- |
