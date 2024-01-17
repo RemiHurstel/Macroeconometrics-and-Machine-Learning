@@ -138,6 +138,28 @@ rf2.fit <- randomForest(X1_train,Y_train,ntree=300,mtry=10,importance=TRUE)
 rf2.fit
 plot(rf2.fit, main = "Evolution of the error according to the number of trees")
 ```
+
+```{r}
+rf_importance_2 = rf2.fit$importance[,2]
+df_importance_2 = as.data.frame(rf_importance_2)
+arrange(df_importance_2, desc(rf_importance_2))
+```
+
+```{r}
+df_mean_importance_2 <- data.frame(
+  variable=rep(names(y),12), rf_importance=df_importance_2$rf_importance_2)
+df_mean_importance_2 <- aggregate(rf_importance_2 ~ variable, 
+                                data = df_mean_importance_2, FUN = mean)
+df_mean_importance_sort_2 <- arrange(df_mean_importance_2, desc(rf_importance_2))
+par(mar = c(10 ,3, 1, 1))
+couleurs <- colorRampPalette(c("red", "yellow"))(length(df_mean_importance_sort_2$variable))
+barplot(df_mean_importance_sort_2$rf_importance_2, 
+        names.arg = df_mean_importance_sort_2$variable,
+        col = couleurs,
+        las=2, main = 'Mean importance of each variable')
+```
+
+
 ```{r}
 dates_train_plot = ymd(dates[13:252])
 plot(dates_train_plot, Y_train, type='l', col='blue', 
@@ -171,7 +193,7 @@ cat("MSE Train: ",compute_mse(Y_train, predict(rf2.fit, newdata = X1_train)), "\
 cat("MSE Test: ",compute_mse(Y_test, predict(rf2.fit, newdata = X1_test)))
 ```
 The MSE between the train and test data sets are very different.
-We want to have a lower MSE for the test part.
+We want the MSE on the test data to be as close as possible of the MSE on the train data.
 
 ```{r}
 dates_plot = ymd(dates[13:length(dates)])
@@ -202,11 +224,33 @@ plot(rf3.fit, main = "Evolution of the error according to the number of trees")
 ```
 
 ```{r}
+rf_importance_3 = rf3.fit$importance[,2]
+df_importance_3 = as.data.frame(rf_importance_3)
+arrange(df_importance_3, desc(rf_importance_3))
+```
+
+```{r}
+df_mean_importance_3 <- data.frame(
+  variable=rep(names(y),12), rf_importance=df_importance_3$rf_importance_3)
+df_mean_importance_3 <- aggregate(rf_importance_3 ~ variable, 
+                                data = df_mean_importance_3, FUN = mean)
+df_mean_importance_sort_3 <- arrange(df_mean_importance_3, desc(rf_importance_3))
+par(mar = c(10 ,3, 1, 1))
+couleurs <- colorRampPalette(c("red", "yellow"))(length(df_mean_importance_sort_3$variable))
+barplot(df_mean_importance_sort_3$rf_importance_3, 
+        names.arg = df_mean_importance_sort_3$variable,
+        col = couleurs,
+        las=2, main = 'Mean importance of each variable')
+```
+
+
+
+```{r}
 cat("MSE Global: ",compute_mse(Y, predict(rf3.fit, newdata = X1)), "\n")
 cat("MSE Train: ",compute_mse(Y_train_2, predict(rf3.fit, newdata = X1_train_2)), "\n")
 cat("MSE Test: ",compute_mse(Y_test_2, predict(rf3.fit, newdata = X1_test_2)), "\n")
 ```
-
+When we randomly choose the data we use for training the model, we have less difference between the MSE on the train and test data set.
 ```{r}
 dates_plot = ymd(dates[13:length(dates)])
 plot(dates_plot, Y, type='l', col='blue', 
