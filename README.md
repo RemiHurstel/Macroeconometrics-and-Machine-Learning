@@ -1,6 +1,6 @@
 # Random Forest for Inflation Forecasting
 
-This project has been realized by Victor Francey and Rémi Hurstel for the course of ***Macroeconometrics and Machine Learning*** from Professor Simoni.
+This project has been realized by Victor Francey and Rémi Hurstel for the course ***Macroeconometrics and Machine Learning*** of Professor Anna Simoni.
 
 ## Installation
 
