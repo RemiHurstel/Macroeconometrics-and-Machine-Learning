@@ -59,7 +59,7 @@ compute_mse <- function(actual_values, predicted_values) {
 We train the RF on the entire period and compare the fitted with the true values.
 ```{r}
 set.seed(117)
-rf.fit <- randomForest(X1,Y,ntree=300,mtry=10,importance=TRUE)
+rf.fit <- randomForest(X1,Y,ntree=200,mtry=10,importance=TRUE)
 rf.fit
 plot(rf.fit, main = "Evolution of the error according to the number of trees")
 ```
@@ -134,7 +134,7 @@ Y_train <- Y[1:240]
 Y_test <- Y[241:nrow(X1)]
 
 set.seed(117)
-rf2.fit <- randomForest(X1_train,Y_train,ntree=300,mtry=10,importance=TRUE)
+rf2.fit <- randomForest(X1_train,Y_train,ntree=200,mtry=10,importance=TRUE)
 rf2.fit
 plot(rf2.fit, main = "Evolution of the error according to the number of trees")
 ```
@@ -218,7 +218,7 @@ X1_test_2 <- X1[-indices_train,]
 Y_train_2 <- Y[indices_train]
 Y_test_2 <- Y[-indices_train]
 set.seed(117)
-rf3.fit <- randomForest(X1_train_2,Y_train_2,ntree=300,mtry=10,importance=TRUE)
+rf3.fit <- randomForest(X1_train_2,Y_train_2,ntree=200,mtry=10,importance=TRUE)
 rf3.fit
 plot(rf3.fit, main = "Evolution of the error according to the number of trees")
 ```
